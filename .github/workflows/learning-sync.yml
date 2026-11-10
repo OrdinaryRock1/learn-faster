@@ -1,0 +1,26 @@
+name: Sync learning progress
+on:
+  push:
+    branches: ['claude/**', 'codex/**']
+permissions:
+  contents: write
+concurrency:
+  group: learning-sync
+  cancel-in-progress: false
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+      - name: Merge session branch
+        env:
+          BRANCH: ${{ github.ref_name }}
+          MAIN: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name "learning-sync[bot]"
+          git config user.email "learning-sync@users.noreply.github.com"
+          git merge --no-edit -X theirs "origin/$BRANCH" -m "learning: sync $BRANCH"
+          git push origin "HEAD:$MAIN"
